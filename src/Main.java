@@ -6,46 +6,76 @@ import java.util.Scanner;
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        int count = 1;
 
         while (true) {
+            System.out.print("Введите путь к файлу: ");
             String path = scanner.nextLine();
             File file = new File(path);
-            boolean fileExist = file.exists();
-            boolean isDirectory = file.isDirectory();
-            if (!fileExist || isDirectory) {
-                System.out.println("Файл не существует или является папкой");
+
+            if (!file.exists() || !file.isFile()) {
+                System.out.println("Файл не существует или это не файл");
                 continue;
             }
-            System.out.println("Путь указан верно");
-            System.out.println("Это файл номер " + count++);
 
             try (FileReader fileReader = new FileReader(file);
                  BufferedReader reader = new BufferedReader(fileReader)) {
 
-                String line;
                 int totalLines = 0;
-                int maxLength = 0;
-                int minLength = Integer.MAX_VALUE;
+                int googleBotCount = 0;
+                int yandexBotCount = 0;
 
+                String line;
                 while ((line = reader.readLine()) != null) {
-                    int length = line.length();
-
-                    if (length > 1024) {
-                        throw new LineTooLongException("Строка слишком длинная: " + length + " символов");
+                    if (line.length() > 1024) {
+                        throw new LineTooLongException("Слишком длинная строка: " + line.length() + " символов");
                     }
 
                     totalLines++;
-                    maxLength = Math.max(maxLength, length);
-                    minLength = Math.min(minLength, length);
+
+                    int lastQuote = line.lastIndexOf("\"");
+                    if (lastQuote <= 0) continue;
+
+                    int secondLastQuote = line.lastIndexOf("\"", lastQuote - 1);
+                    if (secondLastQuote == -1) continue;
+
+                    String userAgent = line.substring(secondLastQuote + 1, lastQuote).trim();
+
+                    int start = userAgent.indexOf('(');
+                    int end = userAgent.indexOf(')');
+
+                    boolean found = false;
+
+                    while (start != -1 && end != -1 && start < end) {
+                        String inside = userAgent.substring(start + 1, end).trim();
+
+                        if (inside.contains("Googlebot")) {
+                            googleBotCount++;
+                            found = true;
+                        } else if (inside.contains("YandexBot")) {
+                            yandexBotCount++;
+                            found = true;
+                        }
+
+                        if (found) break;
+
+                        start = userAgent.indexOf('(', end);
+                        end = userAgent.indexOf(')', end + 1);
+                    }
                 }
 
+                double total = totalLines;
+                double googlePercent = total > 0 ? googleBotCount / total * 100 : 0;
+                double yandexPercent = total > 0 ? yandexBotCount / total * 100 : 0;
+
                 System.out.println("Всего строк: " + totalLines);
-                System.out.println("Самая длинная строка: " + maxLength);
-                System.out.println("Самая короткая строка: " + minLength);
+                System.out.println("Запросы от Googlebot: " + googleBotCount);
+                System.out.println("Запросы от YandexBot: " + yandexBotCount);
+                System.out.printf("Доля Googlebot: %.2f%%\n", googlePercent);
+                System.out.printf("Доля YandexBot: %.2f%%\n", yandexPercent);
+                System.out.printf("Доля ботов: %.2f%%\n", googlePercent + yandexPercent);
 
             } catch (Exception e) {
-                System.out.println("Ошибка при чтении файла: " + e.getMessage());
+                System.err.println("Ошибка при обработке файла: " + e.getMessage());
             }
         }
     }
