@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class Main {
@@ -45,6 +46,18 @@ public class Main {
                 System.out.println("Обработано строк: " + stats.getProcessedCount());
                 System.out.println("Общий трафик: " + stats.getTotalTraffic() + " байт");
                 System.out.printf("Средний трафик в час: %.2f байт/час\n", stats.getTrafficRate());
+
+                System.out.println("\nСуществующие страницы:");
+                for (String page : stats.getExistingPages()) {
+                    System.out.println("- " + page);
+                }
+
+                System.out.println("\nСтатистика операционных систем:");
+                Map<String, Double> osStats = stats.getOsStatistics();
+                for (Map.Entry<String, Double> entry : osStats.entrySet()) {
+                    System.out.printf("- %s: %.2f%%\n", entry.getKey(), entry.getValue() * 100);
+                }
+
             } catch (Exception e) {
                 System.out.println("Ошибка при чтении файла: " + e.getMessage());
             }

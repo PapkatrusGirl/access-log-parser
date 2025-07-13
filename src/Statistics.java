@@ -1,11 +1,17 @@
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class Statistics {
     private long totalTraffic; // Используем long вместо int
     private LocalDateTime minTime;
     private LocalDateTime maxTime;
     private int processedCount;
+    private final Set<String> existingPages = new HashSet<>();
+    private final Map<String, Integer> osCounts = new HashMap<>();
 
     public Statistics() {
         this.totalTraffic = 0L;
@@ -25,6 +31,13 @@ public class Statistics {
             this.maxTime = entryTime;
         }
         this.processedCount++;
+
+        if (entry.getResponseCode() == 200) {
+            existingPages.add(entry.getPath());
+        }
+
+        String os = entry.getUserAgent().getOsType();
+        osCounts.put(os, osCounts.getOrDefault(os, 0) + 1);
     }
 
     public double getTrafficRate() {
@@ -44,5 +57,19 @@ public class Statistics {
 
     public int getProcessedCount() {
         return processedCount;
+    }
+
+    public Set<String> getExistingPages() {
+        return new HashSet<>(existingPages);
+    }
+
+    public Map<String, Double> getOsStatistics() {
+        Map<String, Double> result = new HashMap<>();
+        if (processedCount == 0) return result;
+
+        for (Map.Entry<String, Integer> entry : osCounts.entrySet()) {
+            result.put(entry.getKey(), (double) entry.getValue() / processedCount);
+        }
+        return result;
     }
 }
