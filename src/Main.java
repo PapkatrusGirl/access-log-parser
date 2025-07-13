@@ -52,6 +52,17 @@ public class Main {
                     System.out.println("- " + page);
                 }
 
+                System.out.println("\nНесуществующие страницы:");
+                for (String page : stats.getNotFoundPages()) {
+                    System.out.println("- " + page);
+                }
+
+                System.out.println("\nСтатистика браузеров:");
+                Map<String, Double> browserStats = stats.getBrowserStatistics();
+                for (Map.Entry<String, Double> entry : browserStats.entrySet()) {
+                    System.out.printf("- %s: %.2f%%\n", entry.getKey(), entry.getValue() * 100);
+                }
+
                 System.out.println("\nСтатистика операционных систем:");
                 Map<String, Double> osStats = stats.getOsStatistics();
                 for (Map.Entry<String, Double> entry : osStats.entrySet()) {

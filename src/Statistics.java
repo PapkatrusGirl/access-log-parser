@@ -11,7 +11,10 @@ public class Statistics {
     private LocalDateTime maxTime;
     private int processedCount;
     private final Set<String> existingPages = new HashSet<>();
+    private final Set<String> notFoundPages = new HashSet<>();
     private final Map<String, Integer> osCounts = new HashMap<>();
+    private final Map<String, Integer> browserCounts = new HashMap<>();
+
 
     public Statistics() {
         this.totalTraffic = 0L;
@@ -34,10 +37,40 @@ public class Statistics {
 
         if (entry.getResponseCode() == 200) {
             existingPages.add(entry.getPath());
+        } else if (entry.getResponseCode() == 404) {
+            notFoundPages.add(entry.getPath());
         }
 
         String os = entry.getUserAgent().getOsType();
         osCounts.put(os, osCounts.getOrDefault(os, 0) + 1);
+
+        String browser = entry.getUserAgent().getBrowser();
+        browserCounts.put(browser, browserCounts.getOrDefault(browser, 0) + 1);
+
+    }
+
+    public Set<String> getNotFoundPages() {
+        return new HashSet<>(notFoundPages);
+    }
+
+    public Map<String, Double> getOsStatistics() {
+        Map<String, Double> result = new HashMap<>();
+        if (processedCount == 0) return result;
+
+        for (Map.Entry<String, Integer> entry : osCounts.entrySet()) {
+            result.put(entry.getKey(), (double) entry.getValue() / processedCount);
+        }
+        return result;
+    }
+
+    public Map<String, Double> getBrowserStatistics() {
+        Map<String, Double> result = new HashMap<>();
+        if (processedCount == 0) return result;
+
+        for (Map.Entry<String, Integer> entry : browserCounts.entrySet()) {
+            result.put(entry.getKey(), (double) entry.getValue() / processedCount);
+        }
+        return result;
     }
 
     public double getTrafficRate() {
@@ -61,15 +94,5 @@ public class Statistics {
 
     public Set<String> getExistingPages() {
         return new HashSet<>(existingPages);
-    }
-
-    public Map<String, Double> getOsStatistics() {
-        Map<String, Double> result = new HashMap<>();
-        if (processedCount == 0) return result;
-
-        for (Map.Entry<String, Integer> entry : osCounts.entrySet()) {
-            result.put(entry.getKey(), (double) entry.getValue() / processedCount);
-        }
-        return result;
     }
 }
